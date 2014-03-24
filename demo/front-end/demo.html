@@ -56,7 +56,8 @@
                type="file" 
                accept="image/*" 
                multiple
-               image="images3" />
+               image
+               images="images3" />
         
         <p>Originals</p>
         <img ng-repeat="img in images3" ng-src="{{img.dataURL}}" type="{{img.file.type}}"/>
@@ -76,7 +77,8 @@
                type="file" 
                accept="image/*" 
                multiple
-               image="images4" 
+               image
+               images="images4" 
                resize-max-height="300"
                resize-max-width="250"
                resize-quality="0.7" />
