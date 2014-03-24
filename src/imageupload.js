@@ -98,11 +98,15 @@ angular.module('imageupload', [])
       return canvas.toDataURL(type, quality);
     }
   })
+
+//This should be broken up into 2 directives, one for handling single images, and one for handling multiple images.
+
   .directive('image', ['$q', 'resizeImage', function($q, resizeImage) {
     'use strict'
 
     var URL = window.URL || window.webkitURL;
 
+    //The below function may benifit from being turned into a promise...
     var createImage = function(url, callback) {
       var image = new Image();
       image.onload = function() {
@@ -126,7 +130,6 @@ angular.module('imageupload', [])
       restrict: 'A',
       scope: {
         image: '=',
-        images: '=',
         resizeMaxHeight: '@?',
         resizeMaxWidth: '@?',
         resizeQuality: '@?',
@@ -153,12 +156,7 @@ angular.module('imageupload', [])
 
         var applyScope = function(imageResult) {
           scope.$apply(function() {
-            if(attrs.images){
-              scope.images.push(imageResult);
-            }
-            else{
-              scope.image = imageResult;
-            }
+            scope.image = imageResult;
           });
         };
 
@@ -173,6 +171,98 @@ angular.module('imageupload', [])
             imageResult.dataURL = dataURL;
           });
 
+          if(scope.resizeMaxHeight || scope.resizeMaxWidth || scope.cover) { //resize image
+            doResizing(imageResult, function(imageResult) {
+              applyScope(imageResult);
+            });
+          }
+          else { //no resizing
+            applyScope(imageResult);
+          }
+        };
+
+        element.bind('change', function (evt) {
+          var files = evt.target.files;
+          //this may make more sense as a map()
+          angular.forEach(files, processImage);
+        });
+      }
+    };
+  }])
+
+.directive('images', ['$q', 'resizeImage', function($q, resizeImage) {
+    'use strict'
+
+    var URL = window.URL || window.webkitURL;
+
+    //The below function may benifit from being turned into a promise...
+    var createImage = function(url, callback) {
+      var image = new Image();
+      image.onload = function() {
+        callback(image);
+      };
+      image.src = url;
+    };
+
+    var fileToDataURL = function (file) {
+      var deferred = $q.defer();
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        deferred.resolve(e.target.result);
+      };
+      reader.readAsDataURL(file);
+      return deferred.promise;
+    };
+
+
+    return {
+      restrict: 'A',
+      scope: {
+        images: '=',
+        resizeMaxHeight: '@?',
+        resizeMaxWidth: '@?',
+        resizeQuality: '@?',
+        resizeType: '@?',
+        cover: '@?',
+        coverHeight: '@?',
+        coverWidth: '@?',
+        coverX: '@?',
+        coverY: '@?'
+      },
+      link: function postLink(scope, element, attrs, ctrl) {
+
+
+
+        var doResizing = function(imageResult, callback) {
+          createImage(imageResult.url, function(image) {
+            var dataURL = resizeImage(image, scope);
+            var imageType = dataURL.substring(5, dataURL.indexOf(';'));
+            imageResult.resized = {
+              dataURL: dataURL,
+              type: imageType
+            };
+            callback(imageResult);
+          });
+        };
+
+        var applyScope = function(imageResult) {
+          scope.$apply(function() {
+            scope.images.push(imageResult);
+          });
+        };
+
+        var processImage =  function (file) {
+          //create a result object for each file in files
+          var imageResult = {
+            file: file,
+            url: URL.createObjectURL(file)
+          };
+
+          fileToDataURL(file).then(function (dataURL) {
+            imageResult.dataURL = dataURL;
+          });
+
+          //resizing could be part of the ng-model chain.
           if(scope.resizeMaxHeight || scope.resizeMaxWidth || scope.cover) { //resize image
             doResizing(imageResult, function(imageResult) {
               applyScope(imageResult);
