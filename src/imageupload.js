@@ -1,10 +1,6 @@
 angular.module('imageupload', [])
-  .directive('image', ['$q', function($q) {
-    'use strict'
-
-    var URL = window.URL || window.webkitURL;
-
-    var getResizeArea = function () {
+  .factory('getResizeArea', function(){
+    return function () {
       var resizeAreaId = 'fileupload-resize-area';
 
       var resizeArea = document.getElementById(resizeAreaId);
@@ -18,8 +14,9 @@ angular.module('imageupload', [])
 
       return resizeArea;
     }
-
-    var resizeImage = function (origImage, options) {
+  })
+  .factory("resizeImage", function(getResizeArea){
+    return function (origImage, options) {
       var maxHeight = options.resizeMaxHeight || 300;
       var maxWidth = options.resizeMaxWidth || 250;
       var quality = options.resizeQuality || 0.7;
@@ -39,57 +36,57 @@ angular.module('imageupload', [])
       var imgY = 0;
 
       if(!cover){
-	// calculate the width and height, constraining the proportions
-	if (width > height) {
+        // calculate the width and height, constraining the proportions
+        if (width > height) {
 	  if (width > maxWidth) {
 	    height = Math.round(height *= maxWidth / width);
 	    width = maxWidth;
 	  }
-	} else {
+        } else {
 	  if (height > maxHeight) {
 	    width = Math.round(width *= maxHeight / height);
 	    height = maxHeight;
 	  }
-	}
+        }
 
-	canvas.width = width;
-	canvas.height = height;
+        canvas.width = width;
+        canvas.height = height;
 
       }else{
-	// Logic for calculating size when in cover-mode
-	canvas.width = coverHeight;
-	canvas.height = coverWidth;
-	// Resize image to fit canvas and keep original proportions
-	var ratio = 1;
-	if(height < canvas.height)
-	{
+        // Logic for calculating size when in cover-mode
+        canvas.width = coverHeight;
+        canvas.height = coverWidth;
+        // Resize image to fit canvas and keep original proportions
+        var ratio = 1;
+        if(height < canvas.height)
+        {
 	  ratio = canvas.height / height;
 	  height = height * ratio;
 	  width = width * ratio;
-	}
-	if(width < canvas.width)
-	{
+        }
+        if(width < canvas.width)
+        {
 	  ratio = canvas.width / width;
 	  height = height * ratio;
 	  width = width * ratio;
-	}
+        }
 
-	// Check if both are too big -> downsize
-	if(width > canvas.width && height > canvas.height)
-	{
+        // Check if both are too big -> downsize
+        if(width > canvas.width && height > canvas.height)
+        {
 	  ratio = Math.max(canvas.width/width, canvas.height/height);
 	  height = height * ratio;
 	  width = width * ratio;
-	}
+        }
 
-	// place img according to coverX and coverY values
-	if(width > canvas.width){
+        // place img according to coverX and coverY values
+        if(width > canvas.width){
 	  if(coverX === 'right'){ imgX = canvas.width - width; }
 	  else if (coverX === 'center'){ imgX = (canvas.width - width) / 2; }
-	}else if(height > canvas.height){
+        }else if(height > canvas.height){
 	  if(coverY === 'bottom'){ imgY = canvas.height - height; }
 	  else if (coverY === 'center'){ imgY = (canvas.height - height) / 2; }
-	}
+        }
 
       }
 
@@ -99,7 +96,12 @@ angular.module('imageupload', [])
 
       // get the data from canvas as 70% jpg (or specified type).
       return canvas.toDataURL(type, quality);
-    };
+    }
+  })
+  .directive('image', ['$q', 'resizeImage', function($q, resizeImage) {
+    'use strict'
+
+    var URL = window.URL || window.webkitURL;
 
     var createImage = function(url, callback) {
       var image = new Image();
@@ -124,6 +126,7 @@ angular.module('imageupload', [])
       restrict: 'A',
       scope: {
         image: '=',
+        images: '=',
         resizeMaxHeight: '@?',
         resizeMaxWidth: '@?',
         resizeQuality: '@?',
@@ -150,8 +153,8 @@ angular.module('imageupload', [])
 
         var applyScope = function(imageResult) {
           scope.$apply(function() {
-            if(attrs.multiple){
-              scope.image.push(imageResult);
+            if(attrs.images){
+              scope.images.push(imageResult);
             }
             else{
               scope.image = imageResult;
@@ -181,12 +184,8 @@ angular.module('imageupload', [])
         };
 
         element.bind('change', function (evt) {
-          //when multiple always return an array of images
-          if(attrs.multiple){
-            scope.image = [];
-          }
-
           var files = evt.target.files;
+          scope.images = [];
           //this may make more sense as a map()
           angular.forEach(files, processImage);
         });
