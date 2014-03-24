@@ -188,7 +188,7 @@ angular.module('imageupload', [])
 
           var files = evt.target.files;
           //this may make more sense as a map()
-          files.forEach(processImage);
+          angular.forEach(files, processImage);
         });
       }
     };
