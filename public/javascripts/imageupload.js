@@ -132,7 +132,7 @@ angular.module('imageupload', [])
                 coverHeight: '@?',
                 coverWidth: '@?',
                 coverX: '@?',
-                coverY: '@?',
+                coverY: '@?'
             },
             link: function postLink(scope, element, attrs, ctrl) {
 
@@ -153,10 +153,30 @@ angular.module('imageupload', [])
                         if(attrs.multiple)
                             scope.image.push(imageResult);
                         else
-                            scope.image = imageResult; 
+                            scope.image = imageResult;
                     });
                 };
 
+                var processImage =  function (file) {
+                    //create a result object for each file in files
+                    var imageResult = {
+                        file: file,
+                        url: URL.createObjectURL(file)
+                    };
+
+                    fileToDataURL(file).then(function (dataURL) {
+                        imageResult.dataURL = dataURL;
+                    });
+
+                    if(scope.resizeMaxHeight || scope.resizeMaxWidth || scope.cover) { //resize image
+                        doResizing(imageResult, function(imageResult) {
+                            applyScope(imageResult);
+                        });
+                    }
+                    else { //no resizing
+                        applyScope(imageResult);
+                    }
+                };
 
                 element.bind('change', function (evt) {
                     //when multiple always return an array of images
@@ -165,24 +185,7 @@ angular.module('imageupload', [])
 
                     var files = evt.target.files;
                     for(var i = 0; i < files.length; i++) {
-                        //create a result object for each file in files
-                        var imageResult = {
-                            file: files[i],
-                            url: URL.createObjectURL(files[i])
-                        };
-
-                        fileToDataURL(files[i]).then(function (dataURL) {
-                            imageResult.dataURL = dataURL;
-                        });
-
-                        if(scope.resizeMaxHeight || scope.resizeMaxWidth || scope.cover) { //resize image
-                            doResizing(imageResult, function(imageResult) {
-                                applyScope(imageResult);
-                            });
-                        }
-                        else { //no resizing
-                            applyScope(imageResult);
-                        }
+                        processImage(files[i]);
                     }
                 });
             }
