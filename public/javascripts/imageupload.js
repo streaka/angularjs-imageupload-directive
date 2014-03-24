@@ -150,11 +150,12 @@ angular.module('imageupload', [])
 
         var applyScope = function(imageResult) {
           scope.$apply(function() {
-            //console.log(imageResult);
-            if(attrs.multiple)
+            if(attrs.multiple){
               scope.image.push(imageResult);
-            else
+            }
+            else{
               scope.image = imageResult;
+            }
           });
         };
 
@@ -181,13 +182,13 @@ angular.module('imageupload', [])
 
         element.bind('change', function (evt) {
           //when multiple always return an array of images
-          if(attrs.multiple)
+          if(attrs.multiple){
             scope.image = [];
+          }
 
           var files = evt.target.files;
-          for(var i = 0; i < files.length; i++) {
-            processImage(files[i]);
-          }
+          //this may make more sense as a map()
+          files.forEach(processImage);
         });
       }
     };
