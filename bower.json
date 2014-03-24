@@ -9,5 +9,8 @@
     "demo.html",
     "package.json",
     "public/javascripts/angular.min.js"
-  ]
+  ],
+  "dependencies": {
+    "angular": "~1.2.15"
+  }
 }
