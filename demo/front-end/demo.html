@@ -14,11 +14,8 @@
         <label for="inputImage">Image</label>
 
         <input-image 
-           id="inputImage" 
-          
+           id="inputImage"           
            append-data-uri
-           append-object-url
-
            ng-model="image">
         </input-image>
 
@@ -35,14 +32,16 @@
       <h2>Single image with resizing</h2>
       <div>
         <label for="inputImage2">Image 2</label>
-
-        <input id="inputImage2"
-               type="file"
-               accept="image/*"
-               image="image2"
-               resize-max-height="300"
-               resize-max-width="250"
-               resize-quality="0.7" />
+        
+        <input-image 
+           id="inputImage2"           
+           append-data-uri           
+           resize
+           resize-max-height="300"
+           resize-max-width="250"
+           resize-quality="0.7" 
+           ng-model="image2">
+        </input-image>       
 
         <p>Original</p>
         <img ng-show="image2" ng-src="{{image2.dataURL}}" type="{{image2.file.type}}"/>

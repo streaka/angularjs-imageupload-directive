@@ -236,24 +236,14 @@ angular.module('imageupload', [])
         });
     };
   })
-  .directive('images',  function($q, resizeImage, fileToDataURL, createImage, doResizing) {
+  .directive('inputImages',  function($q, resizeImage, fileToDataURL, createImage) {
     'use strict'
 
     return {
-      restrict: 'A',
-      scope: {
-        images: '=',
-        resizeMaxHeight: '@?',
-        resizeMaxWidth: '@?',
-        resizeQuality: '@?',
-        resizeType: '@?',
-        cover: '@?',
-        coverHeight: '@?',
-        coverWidth: '@?',
-        coverX: '@?',
-        coverY: '@?'
-      },
-      link: function postLink(scope, element, attrs, ctrl) {
+      template: "<input type='file' accept='image/*' multiple>",
+      restrict: 'E',
+      require: "ngModel",
+      link: function postLink(scope, element, attrs, ngModel) {
 
         var processImage =  function (file) {
           //create a result object for each file in files
@@ -266,19 +256,7 @@ angular.module('imageupload', [])
             .then(function (dataURL) {
               imageResult.dataURL = dataURL;
               return imageResult;
-            })
-            .then(function(imageResult){
-              //resizing could be part of the ng-model chain.
-              if(scope.resizeMaxHeight || scope.resizeMaxWidth || scope.cover) { //resize image
-                return doResizing(imageResult, scope);
-              }
-              else { //no resizing
-                return imageResult;
-              }
-            })
-            .then(function(imageResult){
-              scope.images.push(imageResult);
-            })
+            });
         };
 
         element.bind('change', function (evt) {
@@ -299,14 +277,18 @@ angular.module('imageupload', [])
       template: "<input type='file' accept='image/*'>",
       restrict: 'E',
       require: "ngModel",
+      priority: 100,
       link: function (scope, element, attrs, ngModel) {
 
         element.bind('change', function (evt) {
           var files = evt.target.files;
           var imageFile = files[0];
+          var file_obj = {
+            file: imageFile,
+            url: URL.createObjectURL(imageFile) //this is used to generate images/resize
+          };
 
           scope.$apply(function(){
-            var file_obj = {file: imageFile};
             ngModel.$setViewValue(file_obj);
           });
         });
@@ -340,27 +322,30 @@ angular.module('imageupload', [])
       }
     };
   })
+.directive('resize',function($q, doResizing){
+  'use strict'
 
- .directive('appendObjectUrl',  function() {
-    'use strict'
+  return {
+    restrict: 'A',
+    require: "ngModel",
+    link: function (scope, element, attrs, ngModel) {
 
-    return {
-      restrict: 'A',
-      require: "ngModel",
-      link: function (scope, element, attrs, ngModel) {
+      var resizeImage = function() {
 
-        var addObjectUrl = function() {
+        var model = ngModel.$modelValue;
 
-          var model = ngModel.$modelValue;
+        // If the viewValue is invalid (say required but empty) it will be `undefined`
+        if (angular.isUndefined(model) && angular.isUndefined(model.file)) return;
 
-          // If the viewValue is invalid (say required but empty) it will be `undefined`
-          if (angular.isUndefined(model) && angular.isUndefined(model.file)) return;
+        if(attrs.resizeMaxHeight || attrs.resizeMaxWidth) { //resize image
+          doResizing(model, attrs)
+            .then(function(resposne){
+              ngModel.$setViewValue(resposne);
+            });
+        }
+      };
+      ngModel.$viewChangeListeners.push(resizeImage);
+    }
+  };
 
-          model.url = URL.createObjectURL(model.file);
-          ngModel.$setViewValue(model);
-
-        };
-        ngModel.$viewChangeListeners.push(addObjectUrl);
-      }
-    };
-  });
+});
