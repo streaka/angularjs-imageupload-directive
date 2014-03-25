@@ -101,7 +101,7 @@ angular.module('imageupload', [])
 
 //This should be broken up into 2 directives, one for handling single images, and one for handling multiple images.
 
-  .directive('image', ['$q', 'resizeImage', function($q, resizeImage) {
+  .directive('image', function($q, resizeImage) {
     'use strict'
 
     var URL = window.URL || window.webkitURL;
@@ -188,32 +188,56 @@ angular.module('imageupload', [])
         });
       }
     };
-  }])
-
-.directive('images', ['$q', 'resizeImage', function($q, resizeImage) {
-    'use strict'
-
-    var URL = window.URL || window.webkitURL;
-
-    //The below function may benifit from being turned into a promise...
-    var createImage = function(url, callback) {
-      var image = new Image();
-      image.onload = function() {
-        callback(image);
-      };
-      image.src = url;
-    };
-
-    var fileToDataURL = function (file) {
+  })
+  .factory('fileToDataURL', function($q) {
+    return function (file) {
       var deferred = $q.defer();
       var reader = new FileReader();
+      reader.readAsDataURL(file);
+
       reader.onload = function (e) {
         deferred.resolve(e.target.result);
       };
-      reader.readAsDataURL(file);
+      reader.onerror = function(e){
+        deferred.reject(e);
+      };
+      reader.onabort = function(e){
+        deferred.reject(e);
+      };
+
       return deferred.promise;
     };
-
+  })
+  .factory('createImage',function($q){
+    return function(url) {
+      var deferred = $q.defer();
+      var image = new Image();
+      image.src = url;
+      image.onload = function() {
+        deferred.resolve(image);
+      };
+      image.onerror = function(e){
+        deferred.reject(e);
+      }
+      return deferred.promise;
+    };
+  })
+  .factory('doResizing', function($q, createImage, resizeImage){
+    return function(imageResult, scope) {
+      return createImage(imageResult.url)
+        .then(function(image) {
+          var dataURL = resizeImage(image, scope);
+          var imageType = dataURL.substring(5, dataURL.indexOf(';'));
+          imageResult.resized = {
+            dataURL: dataURL,
+            type: imageType
+          };
+          return imageResult
+        });
+    };
+  })
+  .directive('images',  function($q, resizeImage, fileToDataURL, createImage, doResizing) {
+    'use strict'
 
     return {
       restrict: 'A',
@@ -231,26 +255,6 @@ angular.module('imageupload', [])
       },
       link: function postLink(scope, element, attrs, ctrl) {
 
-
-
-        var doResizing = function(imageResult, callback) {
-          createImage(imageResult.url, function(image) {
-            var dataURL = resizeImage(image, scope);
-            var imageType = dataURL.substring(5, dataURL.indexOf(';'));
-            imageResult.resized = {
-              dataURL: dataURL,
-              type: imageType
-            };
-            callback(imageResult);
-          });
-        };
-
-        var applyScope = function(imageResult) {
-          scope.$apply(function() {
-            scope.images.push(imageResult);
-          });
-        };
-
         var processImage =  function (file) {
           //create a result object for each file in files
           var imageResult = {
@@ -258,19 +262,23 @@ angular.module('imageupload', [])
             url: URL.createObjectURL(file)
           };
 
-          fileToDataURL(file).then(function (dataURL) {
-            imageResult.dataURL = dataURL;
-          });
-
-          //resizing could be part of the ng-model chain.
-          if(scope.resizeMaxHeight || scope.resizeMaxWidth || scope.cover) { //resize image
-            doResizing(imageResult, function(imageResult) {
-              applyScope(imageResult);
-            });
-          }
-          else { //no resizing
-            applyScope(imageResult);
-          }
+          fileToDataURL(file)
+            .then(function (dataURL) {
+              imageResult.dataURL = dataURL;
+              return imageResult;
+            })
+            .then(function(imageResult){
+              //resizing could be part of the ng-model chain.
+              if(scope.resizeMaxHeight || scope.resizeMaxWidth || scope.cover) { //resize image
+                return doResizing(imageResult, scope);
+              }
+              else { //no resizing
+                return imageResult;
+              }
+            })
+            .then(function(imageResult){
+              scope.images.push(imageResult);
+            })
         };
 
         element.bind('change', function (evt) {
@@ -281,4 +289,4 @@ angular.module('imageupload', [])
         });
       }
     };
-  }]);
+  });
