@@ -334,10 +334,9 @@ angular.module('imageupload', [])
 
         var model = ngModel.$modelValue;
 
-        // If the viewValue is invalid (say required but empty) it will be `undefined`
         if (angular.isUndefined(model) && angular.isUndefined(model.file)) return;
 
-        if(attrs.resizeMaxHeight || attrs.resizeMaxWidth) { //resize image
+        if(attrs.resizeMaxHeight || attrs.resizeMaxWidth) {
           doResizing(model, attrs)
             .then(function(resposne){
               ngModel.$setViewValue(resposne);
