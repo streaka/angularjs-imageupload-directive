@@ -13,7 +13,11 @@
       <div>
         <label for="inputImage">Image</label>
 
-        <input id="inputImage" type="file" accept="image/*" image="image" />
+        <input-image 
+           id="inputImage" 
+           append-data-uri
+           ng-model="image">
+        </input-image>
 
         <img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
         <button type="submit" ng-click="single(image)" disabled>Add</button>

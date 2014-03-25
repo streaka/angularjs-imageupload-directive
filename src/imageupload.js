@@ -289,4 +289,63 @@ angular.module('imageupload', [])
         });
       }
     };
+  })
+
+
+  .directive('inputImage',  function() {
+    'use strict'
+
+    return {
+      template: "<input type='file' accept='image/*'>",
+      restrict: 'E',
+      require: "ngModel",
+      link: function (scope, element, attrs, ngModel) {
+
+        var processImage =  function (file) {
+          //create a result object for each file in files
+          var imageResult = {
+            file: file,
+            url: URL.createObjectURL(file)
+          };
+
+          return imageResult;
+        };
+
+        element.bind('change', function (evt) {
+          var files = evt.target.files;
+          var imageFile = files[0];
+
+          var processed_image = processImage(imageFile);
+          scope.$apply(function(){
+            ngModel.$setViewValue(processed_image);
+          });
+        });
+      }
+    };
+  })
+
+  .directive('appendDataUri',  function(fileToDataURL) {
+    'use strict'
+
+    return {
+      restrict: 'A',
+      require: "^ngModel",
+      link: function (scope, element, attrs, ngModel) {
+
+        var addDataUri = function() {
+
+          var model = ngModel.$modelValue;
+
+          // If the viewValue is invalid (say required but empty) it will be `undefined`
+          if (angular.isUndefined(model)) return;
+
+          return fileToDataURL(model.file)
+            .then(function (dataURL) {
+              model.dataURL = dataURL;
+              ngModel.$setViewValue(model);
+            });
+        };
+        ngModel.$viewChangeListeners.push(addDataUri);
+      }
+    };
   });
