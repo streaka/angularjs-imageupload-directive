@@ -301,23 +301,13 @@ angular.module('imageupload', [])
       require: "ngModel",
       link: function (scope, element, attrs, ngModel) {
 
-        var processImage =  function (file) {
-          //create a result object for each file in files
-          var imageResult = {
-            file: file,
-            url: URL.createObjectURL(file)
-          };
-
-          return imageResult;
-        };
-
         element.bind('change', function (evt) {
           var files = evt.target.files;
           var imageFile = files[0];
 
-          var processed_image = processImage(imageFile);
           scope.$apply(function(){
-            ngModel.$setViewValue(processed_image);
+            var file_obj = {file: imageFile};
+            ngModel.$setViewValue(file_obj);
           });
         });
       }
@@ -329,7 +319,7 @@ angular.module('imageupload', [])
 
     return {
       restrict: 'A',
-      require: "^ngModel",
+      require: "ngModel",
       link: function (scope, element, attrs, ngModel) {
 
         var addDataUri = function() {
@@ -339,13 +329,38 @@ angular.module('imageupload', [])
           // If the viewValue is invalid (say required but empty) it will be `undefined`
           if (angular.isUndefined(model)) return;
 
-          return fileToDataURL(model.file)
+          fileToDataURL(model.file)
             .then(function (dataURL) {
               model.dataURL = dataURL;
               ngModel.$setViewValue(model);
             });
         };
+
         ngModel.$viewChangeListeners.push(addDataUri);
+      }
+    };
+  })
+
+ .directive('appendObjectUrl',  function() {
+    'use strict'
+
+    return {
+      restrict: 'A',
+      require: "ngModel",
+      link: function (scope, element, attrs, ngModel) {
+
+        var addObjectUrl = function() {
+
+          var model = ngModel.$modelValue;
+
+          // If the viewValue is invalid (say required but empty) it will be `undefined`
+          if (angular.isUndefined(model) && angular.isUndefined(model.file)) return;
+
+          model.url = URL.createObjectURL(model.file);
+          ngModel.$setViewValue(model);
+
+        };
+        ngModel.$viewChangeListeners.push(addObjectUrl);
       }
     };
   });
