@@ -1,4 +1,5 @@
 angular.module('imageuploadDemo', ['imageupload'])
+  .controller('new-scope',function(){})
   .controller('DemoCtrl', function($scope, $http) {
 
     $scope.single = function(image) {
