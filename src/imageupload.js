@@ -20,7 +20,7 @@ angular.module('imageupload', [])
       var maxHeight = options.resizeMaxHeight || 300;
       var maxWidth = options.resizeMaxWidth || 250;
       var quality = options.resizeQuality || 0.7;
-      var cover = options.cover || false;
+      var cover = options.cover || options.cover == "" || false;
       var coverHeight = options.coverHeight || 300;
       var coverWidth = options.coverWidth || 250;
       var coverX = options.coverX || 'left';
@@ -98,97 +98,6 @@ angular.module('imageupload', [])
       return canvas.toDataURL(type, quality);
     }
   })
-
-//This should be broken up into 2 directives, one for handling single images, and one for handling multiple images.
-
-  .directive('image', function($q, resizeImage) {
-    'use strict'
-
-    var URL = window.URL || window.webkitURL;
-
-    //The below function may benifit from being turned into a promise...
-    var createImage = function(url, callback) {
-      var image = new Image();
-      image.onload = function() {
-        callback(image);
-      };
-      image.src = url;
-    };
-
-    var fileToDataURL = function (file) {
-      var deferred = $q.defer();
-      var reader = new FileReader();
-      reader.onload = function (e) {
-        deferred.resolve(e.target.result);
-      };
-      reader.readAsDataURL(file);
-      return deferred.promise;
-    };
-
-
-    return {
-      restrict: 'A',
-      scope: {
-        image: '=',
-        resizeMaxHeight: '@?',
-        resizeMaxWidth: '@?',
-        resizeQuality: '@?',
-        resizeType: '@?',
-        cover: '@?',
-        coverHeight: '@?',
-        coverWidth: '@?',
-        coverX: '@?',
-        coverY: '@?'
-      },
-      link: function postLink(scope, element, attrs, ctrl) {
-
-        var doResizing = function(imageResult, callback) {
-          createImage(imageResult.url, function(image) {
-            var dataURL = resizeImage(image, scope);
-            var imageType = dataURL.substring(5, dataURL.indexOf(';'));
-            imageResult.resized = {
-              dataURL: dataURL,
-              type: imageType
-            };
-            callback(imageResult);
-          });
-        };
-
-        var applyScope = function(imageResult) {
-          scope.$apply(function() {
-            scope.image = imageResult;
-          });
-        };
-
-        var processImage =  function (file) {
-          //create a result object for each file in files
-          var imageResult = {
-            file: file,
-            url: URL.createObjectURL(file)
-          };
-
-          fileToDataURL(file).then(function (dataURL) {
-            imageResult.dataURL = dataURL;
-          });
-
-          if(scope.resizeMaxHeight || scope.resizeMaxWidth || scope.cover) { //resize image
-            doResizing(imageResult, function(imageResult) {
-              applyScope(imageResult);
-            });
-          }
-          else { //no resizing
-            applyScope(imageResult);
-          }
-        };
-
-        element.bind('change', function (evt) {
-          var files = evt.target.files;
-          //this may make more sense as a map()
-          angular.forEach(files, processImage);
-        });
-      }
-    };
-  })
   .factory('fileToDataURL', function($q) {
     return function (file) {
       var deferred = $q.defer();
@@ -250,11 +159,6 @@ angular.module('imageupload', [])
       require: "ngModel",
       link: function postLink(scope, element, attrs, ngModel) {
 
-        // var orig_$isEmpty = ngModel.$isEmpty;
-        // ngModel.$isEmpty = function(value){
-        //   return orig_$isEmpty(value) || (value.length && value.length > 0);
-        // };
-
         element.bind('change', function (evt) {
           var files = evt.target.files;
           var imageFiles = files;
@@ -275,8 +179,6 @@ angular.module('imageupload', [])
       }
     };
   })
-
-
   .directive('inputImage',  function() {
     'use strict'
 
@@ -354,7 +256,7 @@ angular.module('imageupload', [])
     link: function (scope, element, attrs, ngModel) {
 
       function resize(attrs){
-              return function(model){ return doResizing(model,attrs);}
+        return function(model){ return doResizing(model,attrs);}
       }
 
       var resizeImage = function() {
@@ -363,25 +265,59 @@ angular.module('imageupload', [])
 
         if (angular.isUndefined(model) && angular.isUndefined(model.file)) return;
 
-        if(attrs.resizeMaxHeight || attrs.resizeMaxWidth) {
-          if(angular.isArray(model)){
-            var model_update_promises = map(model, resize(attrs));
-            $q.all(model_update_promises)
-              .then(function(updates){
-                ngModel.$modelValue = updates;
-              });
-          }
-          else{
-            doResizing(model, attrs)
-              .then(function(update){
-                ngModel.$modelValue = update;
-              });
-          }
-
+        if(angular.isArray(model)){
+          var model_update_promises = map(model, resize(attrs));
+          $q.all(model_update_promises)
+            .then(function(updates){
+              ngModel.$modelValue = updates;
+            });
         }
+        else{
+          doResizing(model, attrs)
+            .then(function(update){
+              ngModel.$modelValue = update;
+            });
+        }
+
       };
       ngModel.$viewChangeListeners.push(resizeImage);
     }
   };
+})
+.directive('cover',function($q, doResizing, map){
+  'use strict'
 
+  return {
+    restrict: 'A',
+    require: "ngModel",
+    link: function (scope, element, attrs, ngModel) {
+
+      function resize(attrs){
+        return function(model){ return doResizing(model,attrs);}
+      }
+
+      var resizeImage = function() {
+
+        var model = ngModel.$modelValue;
+
+        if (angular.isUndefined(model) && angular.isUndefined(model.file)) return;
+
+        if(angular.isArray(model)){
+          var model_update_promises = map(model, resize(attrs));
+          $q.all(model_update_promises)
+            .then(function(updates){
+              ngModel.$modelValue = updates;
+            });
+        }
+        else{
+          doResizing(model, attrs)
+            .then(function(update){
+              ngModel.$modelValue = update;
+            });
+        }
+
+      };
+      ngModel.$viewChangeListeners.push(resizeImage);
+    }
+  };
 });

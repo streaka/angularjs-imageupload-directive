@@ -112,27 +112,32 @@
 
 
       <h2>Single image with covering</h2>
-      <div>
+      <div ng-controller="new-scope">
         <label for="inputImage5">Image 5</label>
 
-        <input id="inputImage5"
-               type="file"
-               accept="image/*"
-               image="image5"
-               cover="true"
-               cover-height="300"
-               cover-width="100"
-               cover-x="center"
-               cover-y="bottom"
-               resize-quality="0.7" />
+        <input-image
+           id="inputImage5"
+           ng-model="image"
+           append-data-uri
+           cover
+           cover-height="300"
+           cover-width="100"
+           cover-x="center"
+           cover-y="bottom"
+           resize-quality="0.7">
+        </input-image>
 
         <p>Original</p>
-        <img ng-show="image5" ng-src="{{image5.dataURL}}" type="{{image5.file.type}}"/>
+        <img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
         <p>Resized</p>
-        <img ng-show="image5" ng-src="{{image5.resized.dataURL}}"/>
-        <button type="submit" ng-click="single(image5.resized)" disabled>Add</button>
+        <img ng-show="image" ng-src="{{image.resized.dataURL}}"/>
+        <button type="submit" ng-click="single(image.resized)" disabled>Add</button>
+
+        <br>
+        <pre>{{image | json}}</pre>
+
       </div>
-      <pre>{{image5 | json}}</pre>
+
       <hr />
 
     </form>
