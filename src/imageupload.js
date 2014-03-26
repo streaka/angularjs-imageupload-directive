@@ -236,7 +236,12 @@ angular.module('imageupload', [])
         });
     };
   })
-  .directive('inputImages',  function($q, resizeImage, fileToDataURL, createImage) {
+  .factory("map", function(){
+    return function(list, fn){
+      return Array.prototype.map.call(list, fn);
+    };
+  })
+  .directive('inputImages',  function($q, resizeImage, fileToDataURL, createImage, map) {
     'use strict'
 
     return {
@@ -245,25 +250,27 @@ angular.module('imageupload', [])
       require: "ngModel",
       link: function postLink(scope, element, attrs, ngModel) {
 
-        var processImage =  function (file) {
-          //create a result object for each file in files
-          var imageResult = {
-            file: file,
-            url: URL.createObjectURL(file)
-          };
-
-          fileToDataURL(file)
-            .then(function (dataURL) {
-              imageResult.dataURL = dataURL;
-              return imageResult;
-            });
-        };
+        // var orig_$isEmpty = ngModel.$isEmpty;
+        // ngModel.$isEmpty = function(value){
+        //   return orig_$isEmpty(value) || (value.length && value.length > 0);
+        // };
 
         element.bind('change', function (evt) {
           var files = evt.target.files;
-          scope.images = [];
-          //this may make more sense as a map()
-          angular.forEach(files, processImage);
+          var imageFiles = files;
+
+          //convert each file into an image/file object
+          var model = map(files, function(imageFile){
+            var file_obj = {
+              file: imageFile,
+              url: URL.createObjectURL(imageFile) //this is used to generate images/resize
+            };
+            return file_obj;
+          });
+
+          scope.$apply(function(){
+            ngModel.$setViewValue(model);
+          });
         });
       }
     };
@@ -277,27 +284,34 @@ angular.module('imageupload', [])
       template: "<input type='file' accept='image/*'>",
       restrict: 'E',
       require: "ngModel",
-      priority: 100,
       link: function (scope, element, attrs, ngModel) {
 
         element.bind('change', function (evt) {
           var files = evt.target.files;
           var imageFile = files[0];
-          var file_obj = {
+          var model = {
             file: imageFile,
             url: URL.createObjectURL(imageFile) //this is used to generate images/resize
           };
 
           scope.$apply(function(){
-            ngModel.$setViewValue(file_obj);
+            ngModel.$setViewValue(model);
           });
         });
       }
     };
   })
 
-  .directive('appendDataUri',  function(fileToDataURL) {
+  .directive('appendDataUri',  function(fileToDataURL, map, $q) {
     'use strict'
+
+    function appendDataUri(model){
+      return fileToDataURL(model.file)
+        .then(function (dataURL) {
+          model.dataURL = dataURL;
+          return model;
+        });
+    }
 
     return {
       restrict: 'A',
@@ -311,11 +325,20 @@ angular.module('imageupload', [])
           // If the viewValue is invalid (say required but empty) it will be `undefined`
           if (angular.isUndefined(model)) return;
 
-          fileToDataURL(model.file)
-            .then(function (dataURL) {
-              model.dataURL = dataURL;
-              ngModel.$setViewValue(model);
-            });
+          if(angular.isArray(model)){
+            var model_update_promises = map(model, appendDataUri);
+            $q.all(model_update_promises)
+              .then(function(updates){
+                ngModel.$modelValue = updates;
+              });
+          }
+          else{
+            appendDataUri(model)
+              .then(function(update){
+                ngModel.$modelValue = update;
+              });
+          }
+
         };
 
         ngModel.$viewChangeListeners.push(addDataUri);

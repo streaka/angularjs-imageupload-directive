@@ -10,11 +10,11 @@
   <body ng-controller="DemoCtrl">
     <form name="contactform">
       <h2>Single image</h2>
-      <div>
+      <div ng-controller="new-scope">
         <label for="inputImage">Image</label>
 
-        <input-image 
-           id="inputImage"           
+        <input-image
+           id="inputImage"
            append-data-uri
            ng-model="image">
         </input-image>
@@ -22,53 +22,63 @@
         <img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
         <button type="submit" ng-click="single(image)" disabled>Add</button>
         <button type="reset">Clear</button>
+      
+        <br>
+        <pre>{{image | json}}</pre>
       </div>
-      <pre>{{image | json}}</pre>
+      
       <hr />
 
 
 
 
       <h2>Single image with resizing</h2>
-      <div>
+      <div ng-controller="new-scope">
         <label for="inputImage2">Image 2</label>
-        
-        <input-image 
-           id="inputImage2"           
-           append-data-uri           
+
+        <input-image
+           id="inputImage2"
+           append-data-uri
            resize
            resize-max-height="300"
            resize-max-width="250"
-           resize-quality="0.7" 
-           ng-model="image2">
-        </input-image>       
+           resize-quality="0.7"
+           ng-model="image">
+        </input-image>
 
         <p>Original</p>
-        <img ng-show="image2" ng-src="{{image2.dataURL}}" type="{{image2.file.type}}"/>
+        <img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
         <p>Resized</p>
-        <img ng-show="image2" ng-src="{{image2.resized.dataURL}}"/>
+        <img ng-show="image" ng-src="{{image.resized.dataURL}}"/>
         <button type="submit" ng-click="single(image2.resized)" disabled>Add</button>
+      
+        <br>
+        <pre>{{image | json}}</pre>
       </div>
-      <pre>{{image2 | json}}</pre>
+      
       <hr />
 
 
 
       <h2>Multiple images</h2>
-      <div>
+      <div ng-controller="new-scope">
         <label for="inputImage3">Image 3</label>
 
-        <input id="inputImage3"
-               type="file"
-               accept="image/*"
-               multiple
-               images="images3" />
+        <input-images
+           id="inputImage3"
+           append-data-uri
+           ng-model="images">
+        </input-images>
 
         <p>Originals</p>
-        <img ng-repeat="img in images3" ng-src="{{img.dataURL}}" type="{{img.file.type}}"/>
+        <img ng-repeat="img in images" ng-src="{{img.dataURL}}" type="{{img.file.type}}"/>
         <button type="submit" disabled>Add</button>
+
+        <br>
+        <pre>{{images | json}}</pre>      
+
       </div>
-      <pre>{{images3 | json}}</pre>
+      
       <hr />
 
 
