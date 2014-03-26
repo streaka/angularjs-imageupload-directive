@@ -133,6 +133,7 @@ angular.module('imageupload', [])
   })
   .factory('doResizing', function($q, createImage, resizeImage){
     return function(imageResult, scope) {
+      imageResult.url = URL.createObjectURL(imageResult.file); //this is used to generate images/resize
       return createImage(imageResult.url)
         .then(function(image) {
           var dataURL = resizeImage(image, scope);
@@ -166,8 +167,7 @@ angular.module('imageupload', [])
           //convert each file into an image/file object
           var model = map(files, function(imageFile){
             var file_obj = {
-              file: imageFile,
-              url: URL.createObjectURL(imageFile) //this is used to generate images/resize
+              file: imageFile
             };
             return file_obj;
           });
@@ -192,8 +192,7 @@ angular.module('imageupload', [])
           var files = evt.target.files;
           var imageFile = files[0];
           var model = {
-            file: imageFile,
-            url: URL.createObjectURL(imageFile) //this is used to generate images/resize
+            file: imageFile
           };
 
           scope.$apply(function(){
@@ -320,4 +319,163 @@ angular.module('imageupload', [])
       ngModel.$viewChangeListeners.push(resizeImage);
     }
   };
-});
+})
+  .directive("imageDrop", function ($log, $document) {
+    return {
+      restrict: "EA",
+      require: "ngModel",
+      link: function (scope, element, attrs, ngModel) {
+
+        var decoration = attrs.decoration || "drag-over";
+
+        function decorate_dragged_element(element){
+          element.addClass(decoration);
+        }
+        function undecorate_dragged_element(element){
+          element.removeClass(decoration);
+        }
+
+        //When an item is dragged over the document, add .dragOver to the body
+        function onDragOver(e) {
+          $log.debug("drag-over", e);
+          e.preventDefault();
+          decorate_dragged_element(element);
+        };
+
+        //When the user leaves the window, cancels the drag or drops the item
+        function onDragLeave(e) {
+          $log.debug("drag-leave", e);
+          e.preventDefault();
+          undecorate_dragged_element(element);
+        };
+
+        function onDragEnd(e){
+          $log.debug("drag-end", e);
+        }
+
+        function onDragStart(e){
+          $log.debug("drag-start", e);
+        }
+
+        function onDrag(e){
+          $log.debug("drag", e);
+        }
+
+        function onDragOverDoc(e){
+          e.preventDefault();
+        }
+        function onDragLeaveDoc(e){
+          e.preventDefault();
+        }
+        function onDropDoc(e){
+          e.preventDefault();
+        }
+
+        $document.bind("dragover", onDragOverDoc);
+        $document.bind("dragleave", onDragLeaveDoc);
+        $document.bind("drop", onDropDoc);
+
+        element.bind("drag", onDrag);
+        element.bind("dragstart", onDragStart);
+        element.bind("dragend", onDragEnd);
+
+        //Dragging begins on the document (shows the overlay)
+        element.bind("dragover", onDragOver);
+
+        //Dragging ends on the overlay, which takes the whole window
+        element.bind("dragleave", onDragLeave);
+
+        element.bind("drop", function (e) {
+          undecorate_dragged_element(element);
+          $log.debug("drop", e);
+          e.preventDefault();
+          var file = e.dataTransfer.files[0];
+          var file_obj = {file: file};
+          scope.$apply(function(){
+            ngModel.$setViewValue(file_obj);
+          });
+        });
+      }
+    };
+  })
+ .directive("imagesDrop", function ($log, $document, map) {
+    return {
+      restrict: "EA",
+      require: "ngModel",
+      link: function (scope, element, attrs, ngModel) {
+
+        var decoration = attrs.decoration || "drag-over";
+
+        function decorate_dragged_element(element){
+          element.addClass(decoration);
+        }
+        function undecorate_dragged_element(element){
+          element.removeClass(decoration);
+        }
+
+        //When an item is dragged over the document, add .dragOver to the body
+        function onDragOver(e) {
+          $log.debug("drag-over", e);
+          e.preventDefault();
+          decorate_dragged_element(element);
+        };
+
+        //When the user leaves the window, cancels the drag or drops the item
+        function onDragLeave(e) {
+          $log.debug("drag-leave", e);
+          e.preventDefault();
+          undecorate_dragged_element(element);
+        };
+
+        function onDragEnd(e){
+          $log.debug("drag-end", e);
+        }
+
+        function onDragStart(e){
+          $log.debug("drag-start", e);
+        }
+
+        function onDrag(e){
+          $log.debug("drag", e);
+        }
+
+        function onDragOverDoc(e){
+          e.preventDefault();
+        }
+        function onDragLeaveDoc(e){
+          e.preventDefault();
+        }
+        function onDropDoc(e){
+          e.preventDefault();
+        }
+
+        $document.bind("dragover", onDragOverDoc);
+        $document.bind("dragleave", onDragLeaveDoc);
+        $document.bind("drop", onDropDoc);
+
+        element.bind("drag", onDrag);
+        element.bind("dragstart", onDragStart);
+        element.bind("dragend", onDragEnd);
+
+        //Dragging begins on the document (shows the overlay)
+        element.bind("dragover", onDragOver);
+
+        //Dragging ends on the overlay, which takes the whole window
+        element.bind("dragleave", onDragLeave);
+
+        element.bind("drop", function (e) {
+          undecorate_dragged_element(element);
+          $log.debug("drop", e);
+          e.preventDefault();
+          var files = e.dataTransfer.files;
+          var file_objs = map(files, function(file){
+            return {file: file};
+          });
+          scope.$apply(function(){
+            ngModel.$setViewValue(file_objs);
+          });
+        });
+      }
+    };
+  });
+
