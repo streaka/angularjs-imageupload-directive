@@ -85,24 +85,27 @@
 
 
       <h2>Multiple images with resizing</h2>
-      <div>
+      <div ng-controller="new-scope">
         <label for="inputImage4">Image 4</label>
 
-        <input id="inputImage4"
-               type="file"
-               accept="image/*"
-               multiple
-               images="images4"
-               resize-max-height="300"
-               resize-max-width="250"
-               resize-quality="0.7" />
+        <input-images
+           id="inputImage3"
+           append-data-uri
+           resize
+           resize-max-height="300"
+           resize-max-width="250"
+           resize-quality="0.7"
+           ng-model="images">
+        </input-images>
 
         <p>Originals</p>
-        <img ng-repeat="img in images4" ng-src="{{img.dataURL}}" type="{{img.file.type}}"/>
+        <img ng-repeat="img in images" ng-src="{{img.dataURL}}" type="{{img.file.type}}"/>
         <p>Resized</p>
-        <img ng-repeat="img in images4" ng-src="{{img.resized.dataURL}}" />
+        <img ng-repeat="img in images" ng-src="{{img.resized.dataURL}}" />
         <button type="submit" disabled>Add</button>
-        <pre>{{images4 | json}}</pre>
+        
+        <br>
+        <pre>{{images | json}}</pre>
       </div>
       <hr />
 

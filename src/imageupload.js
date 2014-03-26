@@ -345,13 +345,17 @@ angular.module('imageupload', [])
       }
     };
   })
-.directive('resize',function($q, doResizing){
+.directive('resize',function($q, doResizing, map){
   'use strict'
 
   return {
     restrict: 'A',
     require: "ngModel",
     link: function (scope, element, attrs, ngModel) {
+
+      function resize(attrs){
+              return function(model){ return doResizing(model,attrs);}
+      }
 
       var resizeImage = function() {
 
@@ -360,10 +364,20 @@ angular.module('imageupload', [])
         if (angular.isUndefined(model) && angular.isUndefined(model.file)) return;
 
         if(attrs.resizeMaxHeight || attrs.resizeMaxWidth) {
-          doResizing(model, attrs)
-            .then(function(resposne){
-              ngModel.$setViewValue(resposne);
-            });
+          if(angular.isArray(model)){
+            var model_update_promises = map(model, resize(attrs));
+            $q.all(model_update_promises)
+              .then(function(updates){
+                ngModel.$modelValue = updates;
+              });
+          }
+          else{
+            doResizing(model, attrs)
+              .then(function(update){
+                ngModel.$modelValue = update;
+              });
+          }
+
         }
       };
       ngModel.$viewChangeListeners.push(resizeImage);
