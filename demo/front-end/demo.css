@@ -1,0 +1,24 @@
+.drag-over[image-drop] {
+    border: 2px dotted;
+    color: green;
+}
+[image-drop]{
+    border: 2px dotted;
+    color: red;
+}
+.drag-over[image-drop] {
+    border: 2px dotted;
+    color: green;
+}
+[image-drop]{
+    border: 2px dotted;
+    color: red;
+}
+.drag-over[images-drop] {
+    border: 2px dotted;
+    color: green;
+}
+[images-drop]{
+    border: 2px dotted;
+    color: red;
+}
