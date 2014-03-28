@@ -22,7 +22,11 @@
           <label for="inputImage">Image</label>
 
           <img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
-          <button type="submit" ng-click="single(image)" disabled>Add</button>
+          <button type="submit"
+                  ng-click="single(image.file)"
+                  ng-disabled="!image">
+            Add
+          </button>
           <button type="reset">Clear</button>
 
           <br>
@@ -41,7 +45,11 @@
           <label for="inputImage">Image</label>
 
           <img ng-repeat="img in images" ng-src="{{img.dataURL}}" type="{{img.file.type}}"/>
-          <button type="submit" ng-click="single(image)" disabled>Add</button>
+          <button type="submit"
+                  ng-click="single(image.file)"
+                  ng-disabled="!image">
+            Add
+          </button>
           <button type="reset">Clear</button>
 
           <br>
@@ -66,7 +74,6 @@
           <img ng-repeat="img in images" ng-src="{{img.dataURL}}" type="{{img.file.type}}"/>
           <br>
           <img ng-repeat="img in images" ng-src="{{img.resized.dataURL}}" type="{{img.file.type}}"/>
-          <button type="submit" ng-click="single(image)" disabled>Add</button>
           <button type="reset">Clear</button>
 
           <br>
@@ -87,7 +94,12 @@
         </input-image>
 
         <img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
-        <button type="submit" ng-click="single(image)" disabled>Add</button>
+
+        <button type="submit"
+                ng-click="single(image.file)"
+                ng-disabled="!image">
+          Add
+        </button>
         <button type="reset">Clear</button>
 
         <br>
@@ -117,7 +129,11 @@
         <img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
         <p>Resized</p>
         <img ng-show="image" ng-src="{{image.resized.dataURL}}"/>
-        <button type="submit" ng-click="single(image2.resized)" disabled>Add</button>
+        <button type="submit"
+                ng-click="single(image.file)"
+                ng-disabled="!image">
+          Add
+        </button>
 
         <br>
         <pre>{{image | json}}</pre>
