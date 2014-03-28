@@ -7,7 +7,7 @@ angular.module('imageuploadDemo', ['imageupload'])
       formData.append('image', image, image.name);
 
       $http.post('upload', formData, {
-        headers: { 'Content-Type': false },
+        headers: { 'Content-Type': undefined },
         transformRequest: angular.identity
       }).success(function(result) {
         $scope.uploadedImgSrc = result.src;
