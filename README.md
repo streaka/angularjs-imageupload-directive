@@ -26,12 +26,13 @@ The image object has the following properties:
 ### Single image with resizing
 
 ```html
-<input type="file" accept="image/*" image="image2"
-    resize-max-height="300"
-    resize-max-width="250"
-    resize-quality="0.7" />
-Original <img ng-show="image2" ng-src="{{image2.url}}" type="{{image2.file.type}}" />
-Resized <img ng-show="image2" ng-src="{{image2.resized.dataURL}}" />
+<input-image
+    id="inputImage"
+    append-data-uri
+    ng-model="image">
+</input-image>
+
+<img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
 ```
 
 The image object has the following properties:
@@ -46,13 +47,20 @@ The image object has the following properties:
 ### Multiple images with resizing
 
 ```html
-<input type="file" accept="image/*" multiple
-    image="images"
+<input-image
+    id="inputImage2"
+    append-data-uri
+    resize
     resize-max-height="300"
     resize-max-width="250"
-    resize-quality="0.7" />
-Originals <img ng-repeat="img in images" ng-src="{{img.url}}" type="{{img.file.type}}" />
-Resized <img ng-repeat="img in images" ng-src="{{img.resized.dataURL}}" />
+    resize-quality="0.7"
+    ng-model="image">
+</input-image>
+
+<p>Original</p>
+<img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
+<p>Resized</p>
+<img ng-show="image" ng-src="{{image.resized.dataURL}}"/>
 ```
 
 When used with multiple the image object is always an array of objects with the following properties:
@@ -67,18 +75,22 @@ When used with multiple the image object is always an array of objects with the 
 ### Single image with covering
 
 ```html
-<input id="inputImage5" 
-	  type="file" 
-	  accept="image/*" 
-	  image="image5" 
-	  cover="true" 
-	  cover-height="300" 
-	  cover-width="100" 
-	  cover-x="center" 
-	  cover-y="center" 
-	  resize-quality="0.7" />            
-Original  <img ng-show="image5" ng-src="{{image5.url}}" type="{{image5.file.type}}"/>
-Resized  <img ng-show="image5" ng-src="{{image5.resized.dataURL}}"/>
+<input-image
+    id="inputImage5"
+    ng-model="image"
+    append-data-uri
+    cover
+    cover-height="300"
+    cover-width="100"
+    cover-x="center"
+    cover-y="bottom"
+    resize-quality="0.7">
+</input-image>
+
+<p>Original</p>
+<img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
+<p>Resized</p>
+<img ng-show="image" ng-src="{{image.resized.dataURL}}"/>
 ```
 
 
@@ -113,7 +125,7 @@ git clone https://github.com/Mischi/angularjs-imageupload-directive.git
 cd angularjs-imageupload-directive
 npm install
 
-node app.js
+node demo/back-end/app.js
 open http://localhost:8080
 ```
 
