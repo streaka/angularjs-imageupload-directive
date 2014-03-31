@@ -113,7 +113,6 @@ When used with multiple the image object is always an array of objects with the 
 - resize-type (default is 'image/jpg')
 - resize-max-height (default is 300)
 - resize-max-width (default is 250)
-
 - cover
 - cover-height (default is 300)
 - cover-width (default is 250)
