@@ -5,9 +5,6 @@ Demo AngularJS imageupload Directive
 
 imageupload Directive for [AngularJS](http://angularjs.org/)
 
-heavly inspired from [http://www.rubydesigner.com/blog/resizing-images-before-upload-using-html5-canvas](http://www.rubydesigner.com/blog/resizing-images-before-upload-using-html5-canvas).
-
-
 ## Usage
 
 ### Single image 
