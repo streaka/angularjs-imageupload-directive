@@ -13,7 +13,10 @@ heavly inspired from [http://www.rubydesigner.com/blog/resizing-images-before-up
 ### Single image 
 
 ```html
-<input type="file" accept="image/*" image="image"/>
+<input-image
+    ng-model="image"
+    ng-change="uploadImage(image)">
+</input-image>
 <img ng-show="image" ng-src="{{image.url}}" type="{{image.file.type}}" />
 ```
 
@@ -26,9 +29,13 @@ The image object has the following properties:
 ### Single image with resizing
 
 ```html
+
 <input-image
-    id="inputImage"
     append-data-uri
+    resize
+    resize-max-height="300"
+    resize-max-width="250"
+    resize-quality="0.7"
     ng-model="image">
 </input-image>
 
@@ -47,20 +54,19 @@ The image object has the following properties:
 ### Multiple images with resizing
 
 ```html
-<input-image
-    id="inputImage2"
+<input-images
     append-data-uri
     resize
     resize-max-height="300"
     resize-max-width="250"
     resize-quality="0.7"
-    ng-model="image">
-</input-image>
+    ng-model="images">
+</input-images>
 
 <p>Original</p>
-<img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
+<img ng-show="images" ng-src="{{images[0].dataURL}}" type="{{images[0].file.type}}"/>
 <p>Resized</p>
-<img ng-show="image" ng-src="{{image.resized.dataURL}}"/>
+<img ng-show="images" ng-src="{{images[0].resized.dataURL}}"/>
 ```
 
 When used with multiple the image object is always an array of objects with the following properties:
@@ -76,7 +82,6 @@ When used with multiple the image object is always an array of objects with the 
 
 ```html
 <input-image
-    id="inputImage5"
     ng-model="image"
     append-data-uri
     cover
