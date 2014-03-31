@@ -325,7 +325,18 @@
         }
       };
     })
-    .directive("imageDrop", function ($log, $document) {
+    .factory("find_data_transfer", function(){
+      return function (e){
+        if(e.dataTransfer){
+          return e.dataTransfer;
+        }
+        if(e.originalEvent && e.originalEvent.dataTransfer){
+          return e.originalEvent.dataTransfer;
+        }
+        return undefined;
+      };
+    })
+    .directive("imageDrop", function ($log, $document, find_data_transfer) {
       return {
         restrict: "EA",
         require: "ngModel",
@@ -394,7 +405,7 @@
             undecorate_dragged_element(element);
             $log.debug("drop", e);
             e.preventDefault();
-            var file = e.dataTransfer.files[0];
+            var file = find_data_transfer(e).files[0];
             var file_obj = {file: file};
             scope.$apply(function(){
               ngModel.$setViewValue(file_obj);
@@ -403,7 +414,7 @@
         }
       };
     })
-    .directive("imagesDrop", function ($log, $document, map) {
+    .directive("imagesDrop", function ($log, $document, map, find_data_transfer) {
       return {
         restrict: "EA",
         require: "ngModel",
@@ -469,10 +480,13 @@
           element.bind("dragleave", onDragLeave);
 
           element.bind("drop", function (e) {
+
+
             undecorate_dragged_element(element);
             $log.debug("drop", e);
             e.preventDefault();
-            var files = e.dataTransfer.files;
+            var files = find_data_transfer(e).files;
+
             var file_objs = map(files, function(file){
               return {file: file};
             });
