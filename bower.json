@@ -1,6 +1,6 @@
 {
-  "name": "angular-imageupload-directive",
-  "description": "imageupload Directive for AngularJS",
+  "name": "angular-image-upload-datauri",
+  "description": "image related Directives for AngularJS.",
   "version": "1.0.0",
   "main": "public/javascripts/imageupload.js",
   "ignore": [
