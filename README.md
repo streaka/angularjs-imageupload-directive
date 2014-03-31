@@ -7,6 +7,8 @@ imageupload Directive for [AngularJS](http://angularjs.org/)
 
 ## Usage
 
+Please see the [demo](demo/front-end/demo.html) HTML for better and tested examples.
+
 ### Single image 
 
 ```html
@@ -26,7 +28,6 @@ The image object has the following properties:
 ### Single image with resizing
 
 ```html
-
 <input-image
     append-data-uri
     resize
