@@ -5,15 +5,26 @@ Demo AngularJS imageupload Directive
 
 imageupload Directive for [AngularJS](http://angularjs.org/)
 
-heavly inspired from [http://www.rubydesigner.com/blog/resizing-images-before-upload-using-html5-canvas](http://www.rubydesigner.com/blog/resizing-images-before-upload-using-html5-canvas).
-
-
 ## Usage
+
+Please see the [demo](demo/front-end/demo.html) HTML for better and tested examples.
+
+## Features
+
+- Upload Image with FileReader
+- Resize Image via canvas
+- Make image cover certain size while maintaining its original height-width ratio
+- Choose cover origin ( left - center - right / top - center - bottom )
+- Send Image Data URL (base64) to whatever you want.
+- External Drag and Drop support
 
 ### Single image 
 
 ```html
-<input type="file" accept="image/*" image="image"/>
+<input-image
+    ng-model="image"
+    ng-change="uploadImage(image)">
+</input-image>
 <img ng-show="image" ng-src="{{image.url}}" type="{{image.file.type}}" />
 ```
 
@@ -27,8 +38,11 @@ The image object has the following properties:
 
 ```html
 <input-image
-    id="inputImage"
     append-data-uri
+    resize
+    resize-max-height="300"
+    resize-max-width="250"
+    resize-quality="0.7"
     ng-model="image">
 </input-image>
 
@@ -47,20 +61,19 @@ The image object has the following properties:
 ### Multiple images with resizing
 
 ```html
-<input-image
-    id="inputImage2"
+<input-images
     append-data-uri
     resize
     resize-max-height="300"
     resize-max-width="250"
     resize-quality="0.7"
-    ng-model="image">
-</input-image>
+    ng-model="images">
+</input-images>
 
 <p>Original</p>
-<img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
+<img ng-show="images" ng-src="{{images[0].dataURL}}" type="{{images[0].file.type}}"/>
 <p>Resized</p>
-<img ng-show="image" ng-src="{{image.resized.dataURL}}"/>
+<img ng-show="images" ng-src="{{images[0].resized.dataURL}}"/>
 ```
 
 When used with multiple the image object is always an array of objects with the following properties:
@@ -76,7 +89,6 @@ When used with multiple the image object is always an array of objects with the 
 
 ```html
 <input-image
-    id="inputImage5"
     ng-model="image"
     append-data-uri
     cover
@@ -95,33 +107,23 @@ When used with multiple the image object is always an array of objects with the 
 
 
 
-See [demo.html](demo.html) for more concrete examples.
-
 ### Optional Parameter: 
 
 - resize-quality (default is 0.7)
 - resize-type (default is 'image/jpg')
 - resize-max-height (default is 300)
 - resize-max-width (default is 250)
-- cover (default is false)
+- cover
 - cover-height (default is 300)
 - cover-width (default is 250)
 - cover-x (default is 'left')
 - cover-y (default is 'top')
 
 
-## Features
-
-- Upload Image with FileReader
-- Resize Image via canvas
-- Make image cover certain size while maintaining its original height-width ratio
-- Choose cover origin ( left - center - right / top - center - bottom )
-- Send Image Data URL (base64) to whatever you want.
-
 ## How to run the Demo?
 
 ```Shell
-git clone https://github.com/Mischi/angularjs-imageupload-directive.git
+git clone https://github.com/boxxxie/angularjs-imageupload-directive.git
 cd angularjs-imageupload-directive
 npm install
 
@@ -144,13 +146,11 @@ Testimage: 4320x3240 4.22 MB, Resized (70% jpg): 320x270
 
 ## Known Issues
 
+- current demo may not work correctly. please submit PR if you can fix it (may need a build script)
 - filesize can vary from Browser to Browser.
 
 
 ## TODO's
 
-- Use NgModelController instead of image attribute
-- Create [bower](http://bower.io/) compatible repository (component.json, tags, etc.)
-- Match [angular-component-spec](https://github.com/PascalPrecht/angular-component-spec) when it becomes available
-- Clear image property when Form has been reset
-- Create Unit Tests
+- better drag and drop support
+- working make file with Facebook's watchman (currently only jshint is working)
