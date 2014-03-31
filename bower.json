@@ -10,7 +10,7 @@
     "package.json",
     "public/javascripts/angular.min.js"
   ],
-  "dependencies": {
+  "devDependencies": {
     "angular": "~1.2.15"
   }
 }

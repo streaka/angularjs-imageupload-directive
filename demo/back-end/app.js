@@ -11,8 +11,8 @@ var app = express();
   `node demo/back-end/app.js`
 */
 
-var image_download_dir = 'demo/back-end/images';
-var front_end_dir = 'demo/front-end';
+var image_download_dir = '../demo/back-end/images/';
+var front_end_dir = '../demo/front-end/';
 
 app.configure(function() {
   app.set('port', process.env.PORT || 8080);
