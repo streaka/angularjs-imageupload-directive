@@ -132,76 +132,12 @@
         return deferred.promise;
       };
     })
-    .factory("doResizing", function($q, createImage, resizeImage){
-      return function(imageResult, scope) {
-        imageResult.url = URL.createObjectURL(imageResult.file); //this is used to generate images/resize
-        return createImage(imageResult.url)
-          .then(function(image) {
-            var dataURL = resizeImage(image, scope);
-            var imageType = dataURL.substring(5, dataURL.indexOf(";"));
-            imageResult.resized = {
-              dataURL: dataURL,
-              type: imageType
-            };
-            return imageResult;
-          });
-      };
-    })
     .factory("map", function(){
       return function(list, fn){
         return Array.prototype.map.call(list, fn);
       };
     })
-    .directive("inputImages",  function($q, resizeImage, fileToDataURL, createImage, map) {
-
-      return {
-        template: "<input type='file' accept='image/*' multiple>",
-        restrict: "E",
-        require: "ngModel",
-        link: function postLink(scope, element, attrs, ngModel) {
-
-          element.bind("change", function (evt) {
-            var files = evt.target.files;
-
-            //convert each file into an image/file object
-            var model = map(files, function(imageFile){
-              var file_obj = {
-                file: imageFile
-              };
-              return file_obj;
-            });
-
-            scope.$apply(function(){
-              ngModel.$setViewValue(model);
-            });
-          });
-        }
-      };
-    })
-    .directive("inputImage",  function() {
-
-      return {
-        template: "<input type='file' accept='image/*'>",
-        restrict: "E",
-        require: "ngModel",
-        link: function (scope, element, attrs, ngModel) {
-
-          element.bind("change", function (evt) {
-            var files = evt.target.files;
-            var imageFile = files[0];
-            var model = {
-              file: imageFile
-            };
-
-            scope.$apply(function(){
-              ngModel.$setViewValue(model);
-            });
-          });
-        }
-      };
-    })
-
-    .directive("appendDataUri",  function(fileToDataURL, map, $q) {
+    .factory("appendDataUri",  function(fileToDataURL, map, $q) {
 
       function appendDataUri(model){
         return fileToDataURL(model.file)
@@ -211,118 +147,193 @@
           });
       }
 
-      return {
-        restrict: "A",
-        require: "ngModel",
-        link: function (scope, element, attrs, ngModel) {
+      return function(model) {
+        // If the viewValue is invalid (say required but empty) it will be `undefined`
+        if (angular.isUndefined(model)){
+          return;
+        }
 
-          var addDataUri = function() {
-
-            var model = ngModel.$modelValue;
-
-            // If the viewValue is invalid (say required but empty) it will be `undefined`
-            if (angular.isUndefined(model)){
-              return;
-            }
-
-            if(angular.isArray(model)){
-              var model_update_promises = map(model, appendDataUri);
-              $q.all(model_update_promises)
-                .then(function(updates){
-                  ngModel.$modelValue = updates;
-                });
-            }
-            else{
-              appendDataUri(model)
-                .then(function(update){
-                  ngModel.$modelValue = update;
-                });
-            }
-
-          };
-
-          ngModel.$viewChangeListeners.push(addDataUri);
+        if(angular.isArray(model)){
+          var model_update_promises = map(model, appendDataUri);
+          return $q.all(model_update_promises);
+        }
+        else{
+          return appendDataUri(model);
         }
       };
     })
-    .directive("resize",function($q, doResizing, map){
+    .factory("create_model_from_files", function(map){
+      return function(files){
+        var model = map(files, function(imageFile){
+          var file_obj = {
+            file: imageFile
+          };
+          return file_obj;
+        });
+        return model;
+      };
+    })
+    .factory("add_data_uris", function(map, appendDataUri, $q){
+      return function(options){
+        var should_append_data_uris = angular.isDefined(options.appendDataUri);
+        return function(model){
+          if(should_append_data_uris){
+            return $q.all(map(model, appendDataUri));
+          }
+          else{
+            return model;
+          }
+        };
+      };
+    })
+    .factory("doResizing", function($q, createImage, resizeImage){
+      return function(options){
+        return function(model) {
+          model.url = URL.createObjectURL(model.file); //this is used to generate images/resize
+          return createImage(model.url)
+            .then(function(image) {
+              var dataURL = resizeImage(image, options);
+              var imageType = dataURL.substring(5, dataURL.indexOf(";"));
+              model.resized = {
+                dataURL: dataURL,
+                type: imageType
+              };
+              return model;
+            });
+        };
+      };
+    })
+    .factory("resize", function($q, doResizing, map){
+      return function(options){
+        var should_do_resizing = angular.isDefined(options.resize) &&
+          angular.isDefined(options.resizeMaxHeight) &&
+          angular.isDefined(options.resizeMaxWidth);
+
+        return function(model){
+          if(should_do_resizing){
+            return $q.all(map(model, doResizing(options)));
+          }
+          else{
+            return model;
+          }
+        };
+      };
+    })
+    .factory("generic_image_processing_functions", function($q, create_model_from_files, add_data_uris, resize){
+      return function(files, options){
+        return $q.when(create_model_from_files(files))
+          .then(add_data_uris(options))
+          .then(resize(options));
+      };
+    })
+    .directive("inputImages",  function(generic_image_processing_functions) {
 
       return {
-        restrict: "A",
+        template: "<input type='file' accept='image/*' multiple>",
+        restrict: "E",
         require: "ngModel",
         link: function (scope, element, attrs, ngModel) {
 
-          function resize(attrs){
-            return function(model){
-              return doResizing(model,attrs);
-            };
+          function update_model(model){
+            ngModel.$setViewValue(model);
           }
 
-          var resizeImage = function() {
+          element.bind("change", function (evt) {
+            var files = evt.target.files;
 
-            var model = ngModel.$modelValue;
-
-            if (angular.isUndefined(model) && angular.isUndefined(model.file)){
-              return;
-            }
-
-            if(angular.isArray(model)){
-              var model_update_promises = map(model, resize(attrs));
-              $q.all(model_update_promises)
-                .then(function(updates){
-                  ngModel.$modelValue = updates;
-                });
-            }
-            else{
-              doResizing(model, attrs)
-                .then(function(update){
-                  ngModel.$modelValue = update;
-                });
-            }
-
-          };
-          ngModel.$viewChangeListeners.push(resizeImage);
+            generic_image_processing_functions(files, attrs)
+              .then(update_model);
+          });
         }
       };
     })
-    .directive("cover",function($q, doResizing, map){
-
+    .directive("inputImage",  function(generic_image_processing_functions) {
       return {
-        restrict: "A",
+        template: "<input type='file' accept='image/*' multiple>",
+        restrict: "E",
         require: "ngModel",
         link: function (scope, element, attrs, ngModel) {
 
-          function resize(attrs){
-            return function(model){
-              return doResizing(model,attrs);
-            };
+          function update_model(model){
+            ngModel.$setViewValue(model[0]);
           }
 
-          var resizeImage = function() {
+          element.bind("change", function (evt) {
+            var files = evt.target.files;
 
-            var model = ngModel.$modelValue;
-
-            if (angular.isUndefined(model) && angular.isUndefined(model.file)) {
-              return;
-            }
-
-            if(angular.isArray(model)){
-              var model_update_promises = map(model, resize(attrs));
-              $q.all(model_update_promises)
-                .then(function(updates){
-                  ngModel.$modelValue = updates;
-                });
-            }
-            else{
-              doResizing(model, attrs)
-                .then(function(update){
-                  ngModel.$modelValue = update;
-                });
-            }
-
-          };
-          ngModel.$viewChangeListeners.push(resizeImage);
+            generic_image_processing_functions(files, attrs)
+              .then(update_model);
+          });
         }
+      };
+    })
+    .factory("image_drop_linker_common", function($document, $log){
+      return function (scope, element, attrs) {
+
+        var decoration = attrs.decoration || "drag-over";
+
+        function decorate_dragged_element(element){
+          element.addClass(decoration);
+        }
+        function undecorate_dragged_element(element){
+          element.removeClass(decoration);
+        }
+
+        //When an item is dragged over the document, add .dragOver to the body
+        function onDragOver(e) {
+          // $log.debug("drag-over", e);
+          e.preventDefault();
+          decorate_dragged_element(element);
+        }
+
+        //When the user leaves the window, cancels the drag or drops the item
+        function onDragLeave(e) {
+          // $log.debug("drag-leave", e);
+          e.preventDefault();
+          undecorate_dragged_element(element);
+        }
+
+        // function onDragEnd(e){
+        //   //$log.debug("drag-end", e);
+        // }
+
+        // function onDragStart(e){
+        //   // $log.debug("drag-start", e);
+        // }
+
+        // function onDrag(e){
+        //   // $log.debug("drag", e);
+        // }
+
+        function onDragOverDoc(e){
+          e.preventDefault();
+        }
+        function onDragLeaveDoc(e){
+          e.preventDefault();
+        }
+        function onDropDoc(e){
+          e.preventDefault();
+        }
+
+        $document.bind("dragover", onDragOverDoc);
+        $document.bind("dragleave", onDragLeaveDoc);
+        $document.bind("drop", onDropDoc);
+
+        // element.bind("drag", onDrag);
+        // element.bind("dragstart", onDragStart);
+        // element.bind("dragend", onDragEnd);
+
+        //Dragging begins on the document (shows the overlay)
+        element.bind("dragover", onDragOver);
+
+        //Dragging ends on the overlay, which takes the whole window
+        element.bind("dragleave", onDragLeave);
+
+        element.bind("drop", function (e) {
+          e.preventDefault();
+          $log.debug("drop", e);
+          undecorate_dragged_element(element);
+        });
       };
     })
     .factory("find_data_transfer", function(){
@@ -336,163 +347,49 @@
         return undefined;
       };
     })
-    .directive("imageDrop", function ($log, $document, find_data_transfer) {
+    .directive("imageDrop", function (
+      find_data_transfer,
+      image_drop_linker_common,
+      generic_image_processing_functions){
       return {
         restrict: "EA",
         require: "ngModel",
-        link: function (scope, element, attrs, ngModel) {
+        link: function(scope, element, attrs, ngModel){
+          image_drop_linker_common(scope, element, attrs, ngModel);
 
-          var decoration = attrs.decoration || "drag-over";
-
-          function decorate_dragged_element(element){
-            element.addClass(decoration);
+          function update_model(model){
+            ngModel.$setViewValue(model[0]);
           }
-          function undecorate_dragged_element(element){
-            element.removeClass(decoration);
-          }
-
-          //When an item is dragged over the document, add .dragOver to the body
-          function onDragOver(e) {
-            $log.debug("drag-over", e);
-            e.preventDefault();
-            decorate_dragged_element(element);
-          }
-
-          //When the user leaves the window, cancels the drag or drops the item
-          function onDragLeave(e) {
-            $log.debug("drag-leave", e);
-            e.preventDefault();
-            undecorate_dragged_element(element);
-          }
-
-          function onDragEnd(e){
-            $log.debug("drag-end", e);
-          }
-
-          function onDragStart(e){
-            $log.debug("drag-start", e);
-          }
-
-          function onDrag(e){
-            $log.debug("drag", e);
-          }
-
-          function onDragOverDoc(e){
-            e.preventDefault();
-          }
-          function onDragLeaveDoc(e){
-            e.preventDefault();
-          }
-          function onDropDoc(e){
-            e.preventDefault();
-          }
-
-          $document.bind("dragover", onDragOverDoc);
-          $document.bind("dragleave", onDragLeaveDoc);
-          $document.bind("drop", onDropDoc);
-
-          element.bind("drag", onDrag);
-          element.bind("dragstart", onDragStart);
-          element.bind("dragend", onDragEnd);
-
-          //Dragging begins on the document (shows the overlay)
-          element.bind("dragover", onDragOver);
-
-          //Dragging ends on the overlay, which takes the whole window
-          element.bind("dragleave", onDragLeave);
 
           element.bind("drop", function (e) {
-            undecorate_dragged_element(element);
-            $log.debug("drop", e);
-            e.preventDefault();
-            var file = find_data_transfer(e).files[0];
-            var file_obj = {file: file};
-            scope.$apply(function(){
-              ngModel.$setViewValue(file_obj);
-            });
+            var files = find_data_transfer(e).files;
+
+            generic_image_processing_functions(files, attrs)
+              .then(update_model);
           });
         }
       };
     })
-    .directive("imagesDrop", function ($log, $document, map, find_data_transfer) {
+    .directive("imagesDrop", function (
+      find_data_transfer,
+      image_drop_linker_common,
+      generic_image_processing_functions){
       return {
         restrict: "EA",
         require: "ngModel",
         link: function (scope, element, attrs, ngModel) {
 
-          var decoration = attrs.decoration || "drag-over";
+          image_drop_linker_common(scope, element, attrs, ngModel);
 
-          function decorate_dragged_element(element){
-            element.addClass(decoration);
+          function update_model(model){
+            ngModel.$setViewValue(model);
           }
-          function undecorate_dragged_element(element){
-            element.removeClass(decoration);
-          }
-
-          //When an item is dragged over the document, add .dragOver to the body
-          function onDragOver(e) {
-            $log.debug("drag-over", e);
-            e.preventDefault();
-            decorate_dragged_element(element);
-          }
-
-          //When the user leaves the window, cancels the drag or drops the item
-          function onDragLeave(e) {
-            $log.debug("drag-leave", e);
-            e.preventDefault();
-            undecorate_dragged_element(element);
-          }
-
-          function onDragEnd(e){
-            $log.debug("drag-end", e);
-          }
-
-          function onDragStart(e){
-            $log.debug("drag-start", e);
-          }
-
-          function onDrag(e){
-            $log.debug("drag", e);
-          }
-
-          function onDragOverDoc(e){
-            e.preventDefault();
-          }
-          function onDragLeaveDoc(e){
-            e.preventDefault();
-          }
-          function onDropDoc(e){
-            e.preventDefault();
-          }
-
-          $document.bind("dragover", onDragOverDoc);
-          $document.bind("dragleave", onDragLeaveDoc);
-          $document.bind("drop", onDropDoc);
-
-          element.bind("drag", onDrag);
-          element.bind("dragstart", onDragStart);
-          element.bind("dragend", onDragEnd);
-
-          //Dragging begins on the document (shows the overlay)
-          element.bind("dragover", onDragOver);
-
-          //Dragging ends on the overlay, which takes the whole window
-          element.bind("dragleave", onDragLeave);
 
           element.bind("drop", function (e) {
-
-
-            undecorate_dragged_element(element);
-            $log.debug("drop", e);
-            e.preventDefault();
             var files = find_data_transfer(e).files;
 
-            var file_objs = map(files, function(file){
-              return {file: file};
-            });
-            scope.$apply(function(){
-              ngModel.$setViewValue(file_objs);
-            });
+            generic_image_processing_functions(files, attrs)
+              .then(update_model);
           });
         }
       };
