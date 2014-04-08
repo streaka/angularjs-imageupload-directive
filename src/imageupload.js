@@ -227,7 +227,24 @@
       };
     })
 
-    .directive("inputImages",  function(generic_image_processing_functions) {
+    .factory("multi_image_model_updater", function(){
+      return function update_model(ngModel, options){
+        return function(model){
+          var old_model = ngModel.$modelValue;
+          var model_to_update;
+          if(angular.isDefined(options.append) && angular.isArray(old_model)){
+            model_to_update = old_model.concat(model);
+          }
+          else{
+            model_to_update = model;
+          }
+          ngModel.$setViewValue(model_to_update);
+
+        }
+      };
+    })
+    .directive("inputImages",  function(generic_image_processing_functions,
+                                 multi_image_model_updater) {
 
       return {
         require: "ngModel",
@@ -243,13 +260,8 @@
             var files = evt.target.files;
 
             generic_image_processing_functions(files, attrs)
-              .then(update_model);
+              .then(multi_image_model_updater(ngModel, attrs));
           });
-
-          function update_model(model){
-            ngModel.$setViewValue(model);
-          }
-
         }
       };
     })
@@ -367,7 +379,8 @@
     .directive("imagesDrop", function (
       find_data_transfer,
       image_drop_linker_common,
-      generic_image_processing_functions){
+      generic_image_processing_functions,
+      multi_image_model_updater){
       return {
         restrict: "EA",
         require: "ngModel",
@@ -375,15 +388,11 @@
 
           image_drop_linker_common(scope, element, attrs, ngModel);
 
-          function update_model(model){
-            ngModel.$setViewValue(model);
-          }
-
           element.bind("drop", function (e) {
             var files = find_data_transfer(e).files;
 
             generic_image_processing_functions(files, attrs)
-              .then(update_model);
+              .then(multi_image_model_updater(ngModel, attrs));
           });
         }
       };
