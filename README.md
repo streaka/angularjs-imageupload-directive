@@ -66,6 +66,7 @@ The image object has the following properties:
 <button
     input-images
     append-data-uri
+    append
     resize
     resize-max-height="300"
     resize-max-width="250"
@@ -122,6 +123,7 @@ When used with multiple the image object is always an array of objects with the 
 - cover-width (default is 250)
 - cover-x (default is 'left')
 - cover-y (default is 'top')
+- append (appends to model list as opposed to overwriting it)
 
 
 ## How to run the Demo?
@@ -157,4 +159,4 @@ Testimage: 4320x3240 4.22 MB, Resized (70% jpg): 320x270
 ## TODO's
 
 - better drag and drop support
-- working make file with Facebook's watchman (currently only jshint is working)
+- make a build file and break up the main source file into smaller pieces.
