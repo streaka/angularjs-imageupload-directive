@@ -226,44 +226,56 @@
           .then(resize(options));
       };
     })
+
     .directive("inputImages",  function(generic_image_processing_functions) {
 
       return {
-        template: "<input type='file' accept='image/*' multiple>",
-        restrict: "E",
         require: "ngModel",
         link: function (scope, element, attrs, ngModel) {
+
+          var file_upload_element = new angular.element("<input type='file' accept='image/*' multiple>");
+
+          element.on("click", function(){
+            file_upload_element[0].click();
+          });
+
+          file_upload_element.bind("change", function (evt) {
+            var files = evt.target.files;
+
+            generic_image_processing_functions(files, attrs)
+              .then(update_model);
+          });
 
           function update_model(model){
             ngModel.$setViewValue(model);
           }
 
-          element.bind("change", function (evt) {
-            var files = evt.target.files;
-
-            generic_image_processing_functions(files, attrs)
-              .then(update_model);
-          });
         }
       };
     })
     .directive("inputImage",  function(generic_image_processing_functions) {
       return {
-        template: "<input type='file' accept='image/*' multiple>",
-        restrict: "E",
         require: "ngModel",
         link: function (scope, element, attrs, ngModel) {
 
-          function update_model(model){
-            ngModel.$setViewValue(model[0]);
-          }
+          var file_upload_element = new angular.element("<input type='file' accept='image/*'>");
 
-          element.bind("change", function (evt) {
+          element.on("click", function(){
+            file_upload_element[0].click();
+          });
+
+          file_upload_element.bind("change", function (evt) {
             var files = evt.target.files;
 
             generic_image_processing_functions(files, attrs)
               .then(update_model);
           });
+
+          function update_model(model){
+            ngModel.$setViewValue(model[0]);
+          }
+
+
         }
       };
     })
@@ -281,29 +293,15 @@
 
         //When an item is dragged over the document, add .dragOver to the body
         function onDragOver(e) {
-          // $log.debug("drag-over", e);
           e.preventDefault();
           decorate_dragged_element(element);
         }
 
         //When the user leaves the window, cancels the drag or drops the item
         function onDragLeave(e) {
-          // $log.debug("drag-leave", e);
           e.preventDefault();
           undecorate_dragged_element(element);
         }
-
-        // function onDragEnd(e){
-        //   //$log.debug("drag-end", e);
-        // }
-
-        // function onDragStart(e){
-        //   // $log.debug("drag-start", e);
-        // }
-
-        // function onDrag(e){
-        //   // $log.debug("drag", e);
-        // }
 
         function onDragOverDoc(e){
           e.preventDefault();
@@ -318,10 +316,6 @@
         $document.bind("dragover", onDragOverDoc);
         $document.bind("dragleave", onDragLeaveDoc);
         $document.bind("drop", onDropDoc);
-
-        // element.bind("drag", onDrag);
-        // element.bind("dragstart", onDragStart);
-        // element.bind("dragend", onDragEnd);
 
         //Dragging begins on the document (shows the overlay)
         element.bind("dragover", onDragOver);

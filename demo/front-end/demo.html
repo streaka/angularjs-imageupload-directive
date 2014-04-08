@@ -87,11 +87,13 @@
       <div ng-controller="new-scope">
         <label for="inputImage">Image</label>
 
-        <input-image
-           id="inputImage"
+        <button
+           input-image
            append-data-uri
            ng-model="image">
-        </input-image>
+            Custom Upload button
+        </button>
+
 
         <img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
 
@@ -115,7 +117,8 @@
       <div ng-controller="new-scope">
         <label for="inputImage2">Image 2</label>
 
-        <input-image
+        <button
+           input-image
            id="inputImage2"
            append-data-uri
            resize
@@ -123,7 +126,8 @@
            resize-max-width="250"
            resize-quality="0.7"
            ng-model="image">
-        </input-image>
+          Custom Upload Button
+        </button>
 
         <p>Original</p>
         <img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
@@ -147,11 +151,13 @@
       <div ng-controller="new-scope">
         <label for="inputImage3">Image 3</label>
 
-        <input-images
+        <button
+           input-images
            id="inputImage3"
            append-data-uri
            ng-model="images">
-        </input-images>
+          Upload lots of images
+        </button>
 
         <p>Originals</p>
         <img ng-repeat="img in images" ng-src="{{img.dataURL}}" type="{{img.file.type}}"/>
@@ -171,7 +177,8 @@
       <div ng-controller="new-scope">
         <label for="inputImage4">Image 4</label>
 
-        <input-images
+        <button
+           input-images
            id="inputImage3"
            append-data-uri
            resize
@@ -179,7 +186,8 @@
            resize-max-width="250"
            resize-quality="0.7"
            ng-model="images">
-        </input-images>
+          Don't you just love images?
+        </button>
 
         <p>Originals</p>
         <img ng-repeat="img in images" ng-src="{{img.dataURL}}" type="{{img.file.type}}"/>
@@ -198,7 +206,8 @@
       <div ng-controller="new-scope">
         <label for="inputImage5">Image 5</label>
 
-        <input-image
+        <button
+           input-image
            id="inputImage5"
            ng-model="image"
            append-data-uri
@@ -208,7 +217,8 @@
            cover-x="center"
            cover-y="bottom"
            resize-quality="0.7">
-        </input-image>
+          Images everywhere
+        </button>
 
         <p>Original</p>
         <img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
