@@ -240,7 +240,7 @@
           }
           ngModel.$setViewValue(model_to_update);
 
-        }
+        };
       };
     })
     .directive("inputImages",  function(generic_image_processing_functions,
