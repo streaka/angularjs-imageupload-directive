@@ -1,7 +1,7 @@
 {
   "name": "angular-image-upload-datauri",
   "description": "image related Directives for AngularJS.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "main": "src/imageupload.js",
   "ignore": [
     ".gitignore",

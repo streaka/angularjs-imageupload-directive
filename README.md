@@ -21,10 +21,11 @@ Please see the [demo](demo/front-end/demo.html) HTML for better and tested examp
 ### Single image 
 
 ```html
-<input-image
+<button
+    input-image
     ng-model="image"
     ng-change="uploadImage(image)">
-</input-image>
+</button>
 <img ng-show="image" ng-src="{{image.url}}" type="{{image.file.type}}" />
 ```
 
@@ -37,14 +38,15 @@ The image object has the following properties:
 ### Single image with resizing
 
 ```html
-<input-image
+<button
+    input-image
     append-data-uri
     resize
     resize-max-height="300"
     resize-max-width="250"
     resize-quality="0.7"
     ng-model="image">
-</input-image>
+</button>
 
 <img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
 ```
@@ -61,14 +63,15 @@ The image object has the following properties:
 ### Multiple images with resizing
 
 ```html
-<input-images
+<button
+    input-images
     append-data-uri
     resize
     resize-max-height="300"
     resize-max-width="250"
     resize-quality="0.7"
     ng-model="images">
-</input-images>
+</button>
 
 <p>Original</p>
 <img ng-show="images" ng-src="{{images[0].dataURL}}" type="{{images[0].file.type}}"/>
@@ -88,7 +91,8 @@ When used with multiple the image object is always an array of objects with the 
 ### Single image with covering
 
 ```html
-<input-image
+<button
+    input-image
     ng-model="image"
     append-data-uri
     cover
@@ -97,7 +101,7 @@ When used with multiple the image object is always an array of objects with the 
     cover-x="center"
     cover-y="bottom"
     resize-quality="0.7">
-</input-image>
+</button>
 
 <p>Original</p>
 <img ng-show="image" ng-src="{{image.dataURL}}" type="{{image.file.type}}"/>
@@ -133,7 +137,7 @@ open http://localhost:8080
 
 ## Depends on
 
-- angular-1.1.4
+- angular-1.2.15
 
 ## Tested in following browsers:
 
