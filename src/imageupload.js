@@ -16,7 +16,7 @@
         return resizeArea;
       };
     })
-    .factory("resizeImage", function(getResizeArea){
+    .factory("resizeImage", ['getResizeArea', function(getResizeArea){
       return function (origImage, options) {
         var maxHeight = options.resizeMaxHeight || 300;
         var maxWidth = options.resizeMaxWidth || 250;
@@ -98,8 +98,8 @@
         // get the data from canvas as 70% jpg (or specified type).
         return canvas.toDataURL(type, quality);
       };
-    })
-    .factory("fileToDataURL", function($q) {
+    }])
+    .factory("fileToDataURL", ['$q',function($q) {
       return function (file) {
         var deferred = $q.defer();
         var reader = new FileReader();
@@ -117,8 +117,8 @@
 
         return deferred.promise;
       };
-    })
-    .factory("createImage",function($q){
+    }])
+    .factory("createImage",['$q',function($q){
       return function(url) {
         var deferred = $q.defer();
         var image = new Image();
@@ -131,13 +131,13 @@
         };
         return deferred.promise;
       };
-    })
+    }])
     .factory("map", function(){
       return function(list, fn){
         return Array.prototype.map.call(list, fn);
       };
     })
-    .factory("appendDataUri",  function(fileToDataURL, map, $q) {
+    .factory("appendDataUri",  ['fileToDataURL','map','$q',function(fileToDataURL, map, $q) {
 
       function appendDataUri(model){
         return fileToDataURL(model.file)
@@ -161,8 +161,8 @@
           return appendDataUri(model);
         }
       };
-    })
-    .factory("create_model_from_files", function(map){
+    }])
+    .factory("create_model_from_files", ['map',function(map){
       return function(files){
         var model = map(files, function(imageFile){
           var file_obj = {
@@ -172,8 +172,8 @@
         });
         return model;
       };
-    })
-    .factory("add_data_uris", function(map, appendDataUri, $q){
+    }])
+    .factory("add_data_uris", ['map', 'appendDataUri', '$q', function(map, appendDataUri, $q){
       return function(options){
         var should_append_data_uris = angular.isDefined(options.appendDataUri);
         return function(model){
@@ -185,8 +185,8 @@
           }
         };
       };
-    })
-    .factory("doResizing", function($q, createImage, resizeImage){
+    }])
+    .factory("doResizing", ['$q','createImage','resizeImage', function($q, createImage, resizeImage){
       return function(options){
         return function(model) {
           model.url = URL.createObjectURL(model.file); //this is used to generate images/resize
@@ -202,8 +202,8 @@
             });
         };
       };
-    })
-    .factory("resize", function($q, doResizing, map){
+    }])
+    .factory("resize", ['$q','doResizing','map', function($q, doResizing, map){
       return function(options){
         var should_do_resizing = angular.isDefined(options.resize) &&
           angular.isDefined(options.resizeMaxHeight) &&
@@ -218,14 +218,14 @@
           }
         };
       };
-    })
-    .factory("generic_image_processing_functions", function($q, create_model_from_files, add_data_uris, resize){
+    }])
+    .factory("generic_image_processing_functions", ['$q', 'create_model_from_files', 'add_data_uris', 'resize', function($q, create_model_from_files, add_data_uris, resize){
       return function(files, options){
         return $q.when(create_model_from_files(files))
           .then(add_data_uris(options))
           .then(resize(options));
       };
-    })
+    }])
 
     .factory("multi_image_model_updater", function(){
       return function update_model(ngModel, options){
@@ -243,7 +243,7 @@
         };
       };
     })
-    .directive("inputImages",  function(generic_image_processing_functions,
+    .directive("inputImages",  ['generic_image_processing_functions', 'multi_image_model_updater', function(generic_image_processing_functions,
                                  multi_image_model_updater) {
 
       return {
@@ -264,8 +264,8 @@
           });
         }
       };
-    })
-    .directive("inputImage",  function(generic_image_processing_functions) {
+    }])
+    .directive("inputImage",  ['generic_image_processing_functions', function(generic_image_processing_functions) {
       return {
         require: "ngModel",
         link: function (scope, element, attrs, ngModel) {
@@ -290,8 +290,8 @@
 
         }
       };
-    })
-    .factory("image_drop_linker_common", function($document, $log){
+    }])
+    .factory("image_drop_linker_common", ['$document','$log', function($document, $log){
       return function (scope, element, attrs) {
 
         var decoration = attrs.decoration || "drag-over";
@@ -341,7 +341,7 @@
           undecorate_dragged_element(element);
         });
       };
-    })
+    }])
     .factory("find_data_transfer", function(){
       return function (e){
         if(e.dataTransfer){
@@ -353,7 +353,7 @@
         return undefined;
       };
     })
-    .directive("imageDrop", function (
+    .directive("imageDrop", ['find_data_transfer','image_drop_linker_common','generic_image_processing_functions', function (
       find_data_transfer,
       image_drop_linker_common,
       generic_image_processing_functions){
@@ -375,8 +375,8 @@
           });
         }
       };
-    })
-    .directive("imagesDrop", function (
+    }])
+    .directive("imagesDrop", ['find_data_transfer','image_drop_linker_common','generic_image_processing_functions','multi_image_model_updater', function (
       find_data_transfer,
       image_drop_linker_common,
       generic_image_processing_functions,
@@ -396,5 +396,5 @@
           });
         }
       };
-    });
+    }]);
 })();
